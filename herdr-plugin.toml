@@ -2,7 +2,7 @@ id = "simple-switcher"
 name = "Simple Switcher"
 version = "0.1.0"
 min_herdr_version = "0.7.0"
-description = "Fuzzy switch between workspaces and tabs with fzf"
+description = "Fuzzy switch between workspaces, tabs, and agents with fzf"
 platforms = ["linux", "macos"]
 
 [[panes]]
@@ -16,3 +16,9 @@ id = "switch-workspace"
 title = "Switch Workspace"
 placement = "overlay"
 command = ["bash", "scripts/switch-workspace.sh"]
+
+[[panes]]
+id = "switch-agent"
+title = "Switch Agent"
+placement = "overlay"
+command = ["bash", "scripts/switch-agent.sh"]
