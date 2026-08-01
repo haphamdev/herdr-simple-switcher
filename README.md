@@ -39,9 +39,9 @@ Configure the projects root by copying the example config into the plugin config
 cp config.example.env "$(herdr plugin config-dir simple-switcher)/config.env"
 ```
 
-`config.env` sets `PROJECTS_ROOT` (defaults to `~/projects`). A leading `~` and `$HOME` are expanded. `HERDR_SIMPLE_SWITCHER_PROJECTS_ROOT` overrides it at runtime.
+`config.env` sets `PROJECTS_ROOT` (a leading `~` and `$HOME` are expanded); `HERDR_SIMPLE_SWITCHER_PROJECTS_ROOT` overrides it at runtime. A projects root is **required** — there is no default.
 
-If neither `PROJECTS_ROOT` (in `config.env`) nor `HERDR_SIMPLE_SWITCHER_PROJECTS_ROOT` is set, a startup hook shows a one-time Herdr notification each session reminding you to configure it.
+If neither is set, the picker shows setup instructions instead of a project list, and a startup hook posts a Herdr notification each session reminding you to configure it.
 
 ## Keymaps
 

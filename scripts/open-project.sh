@@ -10,7 +10,15 @@ done
 
 HERDR="${HERDR_BIN_PATH:-herdr}"
 
-# Resolve the projects root: env override > plugin config file > default.
+# Popups close when the command exits, so pause on error to keep the message
+# readable before the popup vanishes.
+die() {
+  printf '%s\n\nPress Enter to close…' "$1" >&2
+  read -r _ || true
+  exit 1
+}
+
+# Resolve the projects root: env override > plugin config file (no default).
 projects_root="${HERDR_SIMPLE_SWITCHER_PROJECTS_ROOT:-}"
 if [[ -z "$projects_root" && -n "${HERDR_PLUGIN_CONFIG_DIR:-}" ]]; then
   config_file="$HERDR_PLUGIN_CONFIG_DIR/config.env"
@@ -20,12 +28,20 @@ if [[ -z "$projects_root" && -n "${HERDR_PLUGIN_CONFIG_DIR:-}" ]]; then
     projects_root="${PROJECTS_ROOT:-}"
   fi
 fi
-projects_root="${projects_root:-$HOME/projects}"
+
+if [[ -z "$projects_root" ]]; then
+  die "Open Project is not configured.
+
+Set a projects root, then try again:
+  echo 'PROJECTS_ROOT=\"\$HOME/projects\"' > \"${HERDR_PLUGIN_CONFIG_DIR:-<plugin config dir>}/config.env\"
+
+Or export HERDR_SIMPLE_SWITCHER_PROJECTS_ROOT. See config.example.env."
+fi
+
 projects_root="${projects_root/#\~/$HOME}"
 
 if [[ ! -d "$projects_root" ]]; then
-  echo "projects root not found: $projects_root" >&2
-  exit 1
+  die "Projects root not found: $projects_root"
 fi
 
 # List every git project as "<workspace>/<project>\t<workspace>\t<abs-path>".
