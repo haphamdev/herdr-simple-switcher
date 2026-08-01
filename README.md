@@ -31,7 +31,36 @@ Fuzzy-select an AI agent across all workspaces. Shows agent type, status, and wo
 
 ### Open Project
 
-Fuzzy-select a project and open it in a new tab. Projects are discovered under a configurable root laid out as `<workspace>/<project>` (e.g. `personal/togglr`). The project opens in a new tab on the Herdr workspace whose label matches `<workspace>`; if no such workspace exists, it is created.
+Fuzzy-select a Git project and open it in a new tab.
+
+**How projects are discovered.** Point `PROJECTS_ROOT` at a directory laid out as `<workspace>/<project>`. The plugin runs `fd` to find every Git repository (a `.git` directory) beneath that root and lists each one as `<workspace>/<project>`, where `<workspace>` is the repository's immediate parent directory name.
+
+Given `PROJECTS_ROOT="$HOME/projects"` and this layout:
+
+```
+~/projects
+├── personal
+│   ├── togglr          # Git repo  -> personal/togglr
+│   │   └── .git
+│   ├── clockwise       # Git repo  -> personal/clockwise
+│   │   └── .git
+│   └── notes           # no .git   -> ignored
+└── work
+    └── api             # Git repo  -> work/api
+        └── .git
+```
+
+the picker shows:
+
+```
+personal/clockwise
+personal/togglr
+work/api
+```
+
+**What happens on select.** Choosing `personal/togglr` opens a new tab whose working directory is `~/projects/personal/togglr`, on the Herdr workspace labeled `personal`. If no workspace with that label exists yet, it is created first.
+
+Repositories are matched at any depth, but the workspace label is always the repo's immediate parent directory — so the flat `<workspace>/<project>` layout above is what this action expects.
 
 Configure the projects root by copying the example config into the plugin config dir:
 
