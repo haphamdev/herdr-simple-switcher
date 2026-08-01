@@ -8,17 +8,17 @@ platforms = ["linux", "macos"]
 [[panes]]
 id = "switch-tab"
 title = "Switch Tab"
-placement = "overlay"
+placement = "popup"
 command = ["bash", "scripts/switch-tab.sh"]
 
 [[panes]]
 id = "switch-workspace"
 title = "Switch Workspace"
-placement = "overlay"
+placement = "popup"
 command = ["bash", "scripts/switch-workspace.sh"]
 
 [[panes]]
 id = "switch-agent"
 title = "Switch Agent"
-placement = "overlay"
+placement = "popup"
 command = ["bash", "scripts/switch-agent.sh"]
