@@ -75,9 +75,9 @@ Then create `config.env` there with your projects root:
 PROJECTS_ROOT="$HOME/projects"
 ```
 
-A leading `~` and `$HOME` are expanded. Set `HERDR_SIMPLE_SWITCHER_PROJECTS_ROOT` to override it at runtime. A projects root is **required** — there is no default.
+A leading `~` and `$HOME` are expanded. A projects root is **required** — there is no default.
 
-If neither is set, the picker shows setup instructions instead of a project list, and a startup hook posts a Herdr notification each session reminding you to configure it.
+If it is not set, the picker shows setup instructions instead of a project list, and a startup hook posts a Herdr notification each session reminding you to configure it.
 
 ## Keymaps
 

@@ -43,8 +43,8 @@ Scripts are independent, stateless, argument-free, and interactive-only (no auto
 - `scripts/switch-workspace.sh` — lists workspaces (number, label, tab count with `tab`/`tabs` pluralization); focuses via `herdr workspace focus <workspace_id>`.
 - `scripts/switch-tab.sh` — resolves the current workspace, lists its tabs (`herdr tab list --workspace <WID>`), shows the workspace label in the fzf header; focuses via `herdr tab focus <tab_id>`.
 - `scripts/switch-agent.sh` — lists agents across all workspaces (name, `[agent_status]`, cwd), filters empty agents; focuses via `herdr agent focus <pane_id>`.
-- `scripts/open-project.sh` — `fd`-discovers git repos under `PROJECTS_ROOT` (`<workspace>/<project>` layout), picks one, then reuses or creates the matching-label workspace and opens the project in a new tab via `herdr tab create --cwd <path> --label <project>` (parses `.result.tab.tab_id` / `.result.workspace.workspace_id`). Projects root resolves as `HERDR_SIMPLE_SWITCHER_PROJECTS_ROOT` env > `PROJECTS_ROOT` in `$HERDR_PLUGIN_CONFIG_DIR/config.env`; if neither is set the popup prints setup instructions and exits (no default). Error paths use `die()` to pause (`read`) so the message stays readable before the popup closes.
-- `scripts/startup-check.sh` — startup hook; if neither `HERDR_SIMPLE_SWITCHER_PROJECTS_ROOT` nor `PROJECTS_ROOT` (in `config.env`) is set, fires `herdr notification show` to prompt setup. Exits 0 otherwise.
+- `scripts/open-project.sh` — `fd`-discovers git repos under `PROJECTS_ROOT` (`<workspace>/<project>` layout), picks one, then reuses or creates the matching-label workspace and opens the project in a new tab via `herdr tab create --cwd <path> --label <project>` (parses `.result.tab.tab_id` / `.result.workspace.workspace_id`). Projects root comes solely from `PROJECTS_ROOT` in `$HERDR_PLUGIN_CONFIG_DIR/config.env` (no env override, no default); if unset the popup prints setup instructions and exits. Error paths use `die()` to pause (`read`) so the message stays readable before the popup closes.
+- `scripts/startup-check.sh` — startup hook; if `PROJECTS_ROOT` is not defined in `config.env`, fires `herdr notification show` to prompt setup. Exits 0 otherwise.
 - `scripts/open-pane.sh` — action launcher; `exec "$HERDR" plugin pane open --plugin simple-switcher --entrypoint "$1"`. One generic script backs all four actions.
 - `config.example.env` — template for the user's `config.env` (copied into the plugin config dir); sets `PROJECTS_ROOT`.
 - `README.md` — install (`herdr plugin install hapham/herdr-simple-switcher`), requirements, and example keybindings.
@@ -66,8 +66,8 @@ bash scripts/open-project.sh
 # Point scripts at a specific herdr binary
 HERDR_BIN_PATH=/path/to/herdr bash scripts/switch-agent.sh
 
-# Point Open Project at a projects root without a config file
-HERDR_SIMPLE_SWITCHER_PROJECTS_ROOT=~/code bash scripts/open-project.sh
+# Run Open Project (reads PROJECTS_ROOT from the plugin config.env)
+HERDR_PLUGIN_CONFIG_DIR=/path/to/config bash scripts/open-project.sh
 ```
 
 Actions are also invoked from user keymaps as `simple-switcher.<pane-id>` (e.g. `simple-switcher.switch-workspace`).
@@ -90,7 +90,7 @@ All scripts are deliberately uniform — match this style exactly when adding or
 - **Formatting**: `jq -r` builds tab-delimited `display\tID` lines; focused rows are prefixed with `"* "` vs `"  "` via `(if .focused then "* " else "  " end)`.
 - **Selection**: `fzf --delimiter=$'\t' --with-nth=1 --prompt="<Label> > " --reverse --no-multi --exit-0 || true` — `|| true` swallows fzf exit 130 on Esc so `set -e` doesn't abort.
 - **Apply**: guard with `if [[ -n "$selected" ]]; then …`, extract ID with `cut -f2`, redirect focus/mutation output to `>/dev/null`.
-- **Config**: plugin owns its config format (Herdr has no config API). Read user config from `$HERDR_PLUGIN_CONFIG_DIR/config.env` (sourced), allow an env-var override, and fall back to a sane default — see `open-project.sh` resolving `PROJECTS_ROOT`.
+- **Config**: plugin owns its config format (Herdr has no config API). Read user config from `$HERDR_PLUGIN_CONFIG_DIR/config.env` (sourced); require it explicitly and fail with a clear message when unset (no silent default) — see `open-project.sh` resolving `PROJECTS_ROOT`.
 - **Naming**: hyphenated script files (`<verb>-<entity>.sh`); lowercase locals (`selected`, `pane_id`, `workspace_id`, `tab_id`, `project_path`); uppercase constants (`HERDR`); no spaces around `=`; double-quote all variable expansions.
 
 ## Runtime/Tooling Preferences

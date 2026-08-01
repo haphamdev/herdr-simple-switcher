@@ -18,9 +18,9 @@ die() {
   exit 1
 }
 
-# Resolve the projects root: env override > plugin config file (no default).
-projects_root="${HERDR_SIMPLE_SWITCHER_PROJECTS_ROOT:-}"
-if [[ -z "$projects_root" && -n "${HERDR_PLUGIN_CONFIG_DIR:-}" ]]; then
+# Resolve the projects root from the plugin config file (no env override, no default).
+projects_root=""
+if [[ -n "${HERDR_PLUGIN_CONFIG_DIR:-}" ]]; then
   config_file="$HERDR_PLUGIN_CONFIG_DIR/config.env"
   if [[ -f "$config_file" ]]; then
     # shellcheck source=/dev/null
@@ -33,9 +33,7 @@ if [[ -z "$projects_root" ]]; then
   die "Open Project is not configured.
 
 Set a projects root, then try again:
-  echo 'PROJECTS_ROOT=\"\$HOME/projects\"' > \"${HERDR_PLUGIN_CONFIG_DIR:-<plugin config dir>}/config.env\"
-
-Or export HERDR_SIMPLE_SWITCHER_PROJECTS_ROOT. See config.example.env."
+  echo 'PROJECTS_ROOT=\"\$HOME/projects\"' > \"${HERDR_PLUGIN_CONFIG_DIR:-<plugin config dir>}/config.env\""
 fi
 
 projects_root="${projects_root/#\~/$HOME}"

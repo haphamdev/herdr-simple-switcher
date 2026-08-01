@@ -10,11 +10,9 @@ config_dir="${HERDR_PLUGIN_CONFIG_DIR:-}"
 config_file=""
 [[ -n "$config_dir" ]] && config_file="$config_dir/config.env"
 
-# Configured if the runtime override is set, or config.env defines PROJECTS_ROOT.
+# Configured if config.env defines PROJECTS_ROOT.
 configured=0
-if [[ -n "${HERDR_SIMPLE_SWITCHER_PROJECTS_ROOT:-}" ]]; then
-  configured=1
-elif [[ -n "$config_dir" && -f "$config_file" ]]; then
+if [[ -n "$config_dir" && -f "$config_file" ]]; then
   # shellcheck source=/dev/null
   . "$config_file"
   [[ -n "${PROJECTS_ROOT:-}" ]] && configured=1
@@ -22,6 +20,6 @@ fi
 
 if [[ "$configured" -eq 0 ]]; then
   "$HERDR" notification show "Simple Switcher setup" \
-    --body "Open Project needs a projects root. Set PROJECTS_ROOT in ${config_file:-the plugin config.env} (see config.example.env), or export HERDR_SIMPLE_SWITCHER_PROJECTS_ROOT." \
+    --body "Open Project needs a projects root. Set PROJECTS_ROOT in ${config_file:-the plugin config.env} (see config.example.env)." \
     >/dev/null 2>&1 || true
 fi
