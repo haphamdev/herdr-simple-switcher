@@ -6,7 +6,7 @@
 
 ## Architecture & Data Flow
 
-The plugin is manifest-driven. `herdr-plugin.toml` declares four `[[panes]]`, each spawning a bash script as a `popup`. The three switch scripts follow the identical pipeline:
+The plugin is manifest-driven. `herdr-plugin.toml` declares four `[[panes]]` (each a bash script rendered as a `popup`) and four matching `[[actions]]`. A keybinding invokes an action (`type = "plugin_action"`, id `simple-switcher.<id>`); the action runs `scripts/open-pane.sh <id>`, which calls `herdr plugin pane open` to launch the popup pane. This indirection exists because Herdr keybindings can invoke an **action** but cannot open a **pane** directly — panes render the popup UI, actions only run commands. (You can also open a pane straight from a `type = "shell"` keybind, skipping the action.) The three switch scripts follow the identical pipeline:
 
 ```
 herdr <entity> list           # query state as JSON
@@ -27,24 +27,25 @@ fd -H -t d '^\.git$' $PROJECTS_ROOT  # find repos, emit "ws/proj\tws\tabs-path"
   → herdr workspace focus / herdr tab focus                   # apply
 ```
 
-A `[[startup]]` hook (`scripts/startup-check.sh`) runs once per session and posts a `herdr notification show` toast when the projects root is unconfigured — startup stdout only reaches the plugin log, so user-facing messages must go through the notification CLI.
+A `[[startup]]` hook (`scripts/startup-check.sh`) runs once per session and posts a `herdr notification show` toast when the projects root is unconfigured — startup stdout only reaches the plugin log, so user-facing messages must go through the notification CLI. Action commands are likewise non-interactive (no TTY); interactive fzf must run inside a pane, which is why actions delegate to `plugin pane open`.
 
 Scripts are independent, stateless, argument-free, and interactive-only (no automated assertions).
 
 ## Key Directories
 
-- `scripts/` — the four action scripts (one bash file per pane) plus `startup-check.sh` (startup hook).
+- `scripts/` — four pane scripts (one bash file per popup), `open-pane.sh` (action→pane launcher), and `startup-check.sh` (startup hook).
 - `.claude/` — local agent permission config (`settings.local.json`).
 - Repo root — plugin manifest, `config.example.env`, and docs. No `src/`, no `tests/`.
 
 ## Important Files
 
-- `herdr-plugin.toml` — plugin manifest and entry points. Top-level: `id = "simple-switcher"`, `version = "0.3.0"`, `min_herdr_version = "0.7.0"`, `platforms = ["linux", "macos"]`. One `[[startup]]` hook and four `[[panes]]` mapping `id` → `command = ["bash", "scripts/<name>.sh"]`.
+- `herdr-plugin.toml` — plugin manifest and entry points. Top-level: `id = "simple-switcher"`, `version = "0.4.0"`, `min_herdr_version = "0.7.0"`, `platforms = ["linux", "macos"]`. One `[[startup]]` hook, four `[[actions]]` (each `command = ["bash", "scripts/open-pane.sh", "<id>"]`), and four `[[panes]]` (`placement = "popup"`, `command = ["bash", "scripts/<name>.sh"]`). Action ids and pane ids share names but live in separate id namespaces.
 - `scripts/switch-workspace.sh` — lists workspaces (number, label, tab count with `tab`/`tabs` pluralization); focuses via `herdr workspace focus <workspace_id>`.
 - `scripts/switch-tab.sh` — resolves the current workspace, lists its tabs (`herdr tab list --workspace <WID>`), shows the workspace label in the fzf header; focuses via `herdr tab focus <tab_id>`.
 - `scripts/switch-agent.sh` — lists agents across all workspaces (name, `[agent_status]`, cwd), filters empty agents; focuses via `herdr agent focus <pane_id>`.
 - `scripts/open-project.sh` — `fd`-discovers git repos under `PROJECTS_ROOT` (`<workspace>/<project>` layout), picks one, then reuses or creates the matching-label workspace and opens the project in a new tab via `herdr tab create --cwd <path> --label <project>` (parses `.result.tab.tab_id` / `.result.workspace.workspace_id`). Projects root resolves as `HERDR_SIMPLE_SWITCHER_PROJECTS_ROOT` env > `PROJECTS_ROOT` in `$HERDR_PLUGIN_CONFIG_DIR/config.env` > `~/projects`.
 - `scripts/startup-check.sh` — startup hook; if neither `HERDR_SIMPLE_SWITCHER_PROJECTS_ROOT` nor `PROJECTS_ROOT` (in `config.env`) is set, fires `herdr notification show` to prompt setup. Exits 0 otherwise.
+- `scripts/open-pane.sh` — action launcher; `exec "$HERDR" plugin pane open --plugin simple-switcher --entrypoint "$1"`. One generic script backs all four actions.
 - `config.example.env` — template for the user's `config.env` (copied into the plugin config dir); sets `PROJECTS_ROOT`.
 - `README.md` — install (`herdr plugin install hapham/herdr-simple-switcher`), requirements, and example keybindings.
 
@@ -96,7 +97,7 @@ All scripts are deliberately uniform — match this style exactly when adding or
 
 - **Runtime**: `bash`. No Node, Bun, Rust, or package manager — do not introduce one.
 - **Required tools on the host**: `herdr` CLI (>= 0.7.0), `fzf`, `jq`, and `fd` (Open Project only).
-- **Manifest schema**: Herdr `[[panes]]` and `[[startup]]` (v0.7.0+). Panes: `id`, `title`, `placement = "popup"`, `command`. Startup: `command` (one-shot, async; output goes to the plugin log, not the user — use `herdr notification show` for user-facing messages).
+- **Manifest schema**: Herdr `[[panes]]`, `[[actions]]`, and `[[startup]]` (v0.7.0+). Panes: `id`, `title`, `placement = "popup"`, `command`. Actions: `id`, `title`, `contexts = ["workspace"]`, `command` — invoked via `plugin_action` keybindings; run a command with no TTY, so they delegate interactive UI to a pane. Startup: `command` (one-shot, async; output goes to the plugin log, not the user — use `herdr notification show` for user-facing messages).
 - `.claude/settings.local.json` restricts agent Bash to `rtk ls *` and `herdr agent *`, and WebFetch to the `herdr.dev` domain.
 - **Plugin runtime env** (injected by Herdr): call the CLI via `HERDR_BIN_PATH`; read user config from `HERDR_PLUGIN_CONFIG_DIR`; durable state (if ever needed) goes in `HERDR_PLUGIN_STATE_DIR` — never write into `HERDR_PLUGIN_ROOT` (managed checkout).
 

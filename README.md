@@ -73,7 +73,16 @@ command = "simple-switcher.open-project"
 description = "open project"
 ```
 
-All actions open as popups — pick an item and the popup closes, or press `Esc` to cancel.
+Each keybinding above uses `type = "plugin_action"` to invoke a plugin action (`simple-switcher.<id>`); the action opens the matching popup pane. All actions open as popups — pick an item and the popup closes, or press `Esc` to cancel.
+
+Alternatively, open a pane directly with a shell command (no action indirection):
+
+```toml
+[[keys.command]]
+key = "prefix+p"
+type = "shell"
+command = "herdr plugin pane open --plugin simple-switcher --entrypoint open-project"
+```
 
 ## License
 

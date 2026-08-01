@@ -1,12 +1,36 @@
 id = "simple-switcher"
 name = "Simple Switcher"
-version = "0.3.0"
+version = "0.4.0"
 min_herdr_version = "0.7.0"
 description = "Fuzzy switch between workspaces, tabs, agents, and projects with fzf"
 platforms = ["linux", "macos"]
 
 [[startup]]
 command = ["bash", "scripts/startup-check.sh"]
+
+[[actions]]
+id = "switch-tab"
+title = "Switch Tab"
+contexts = ["workspace"]
+command = ["bash", "scripts/open-pane.sh", "switch-tab"]
+
+[[actions]]
+id = "switch-workspace"
+title = "Switch Workspace"
+contexts = ["workspace"]
+command = ["bash", "scripts/open-pane.sh", "switch-workspace"]
+
+[[actions]]
+id = "switch-agent"
+title = "Switch Agent"
+contexts = ["workspace"]
+command = ["bash", "scripts/open-pane.sh", "switch-agent"]
+
+[[actions]]
+id = "open-project"
+title = "Open Project"
+contexts = ["workspace"]
+command = ["bash", "scripts/open-pane.sh", "open-project"]
 
 [[panes]]
 id = "switch-tab"
